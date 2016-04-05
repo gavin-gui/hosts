@@ -1,13 +1,24 @@
-#!/usr/bin/env bash
-if [ ${UID} == 0 ]; then
-    mv /etc/hosts /etc/hosts-$(date +%F-%H%M%S).bak
-    wget https://raw.githubusercontent.com/racaljk/hosts/master/hosts -O fetchedhosts
+#!/bin/sh
+#
+# script_tool_for_linux
+#
+# Use command: `sudo sh script_tool_for_linux.sh` or
+#                `su -c 'sh script_tool_for_linux.sh'`
+# to update your hosts file.
+#
+# @WARNING: the script CAN NOT replace others' hosts rules.
+#           If you have hosts rules provided by others, you may get conflict.
+#
+if [ `id -u` -eq 0 ]; then
+    wget 'https://raw.githubusercontent.com/racaljk/hosts/master/hosts' -O /tmp/fetchedhosts --no-check-certificate
+    sed -i '/# Copyright (c) 2014/,/# Modified hosts end/d' /etc/hosts
 
-	sed -i "s/localhost/localhost $(hostname)/g" fetchedhosts
-	sed -i "s/broadcasthost/broadcasthost $(hostname)/g" fetchedhosts
+    sed -i '/127.0.0.1/c\127.0.0.1 '"$(hostname)"'\' /tmp/fetchedhosts
 
-    mv fetchedhosts /etc/hosts
-    echo Success.
+    cat /tmp/fetchedhosts >> /etc/hosts
+    rm -f /tmp/fetchedhosts
+
+    echo 'Success.'
 else
-    echo permission denied, are you root?
+    echo 'Permission denied, are you root?'
 fi
